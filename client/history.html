@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BUMP! - Play History</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: #CAE6FF;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .container {
+            position: relative;
+            width: 770px;
+            height: 480px;
+            margin: 0 auto;
+            top: 0;
+        }
+
+        .title {
+            position: absolute;
+            width: 100%;
+            top: 80px;
+            font-size: 40px;
+            line-height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            letter-spacing: 3px;
+            color: #000000;
+            white-space: nowrap;
+        }
+
+        .history-frame {
+            position: absolute;
+            width: 770px;
+            height: 200px;
+            top: 180px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+
+        .mode-stat {
+            width: 100%;
+            height: auto;
+            padding: 5px 0;
+            font-family: 'Roboto';
+            font-style: normal;
+            font-weight: 500;
+            font-size: 24px;
+            line-height: 1.5;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            letter-spacing: 0.16px;
+            color: #000000;
+        }
+
+        .mode-name {
+            text-align: right;
+            font-size: 28px;
+            margin-bottom: 5px;
+        }
+
+        .mode-stats {
+            text-align: left;
+        }
+
+        .stat-line {
+            display: block;
+            line-height: 1.8;
+        }
+
+        .stat-value {
+            text-decoration: underline;
+        }
+
+        .back-btn {
+            position: absolute;
+            bottom: -250px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 24px;
+            background: #98CEFF;
+            border: none;
+            border-radius: 100px;
+            font-family: 'Roboto';
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+        }
+    </style>
+    <script>
+        window.onload = function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const username = urlParams.get('username');
+
+            // Update the title with username
+            document.querySelector('.title').textContent = `${username}'s Play History:`;
+
+            // Fetch user's play history from database
+            fetch(`/get_history?username=${encodeURIComponent(username)}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('easy-wins').innerHTML = `
+                        <div class="mode-name">Easy mode</div>
+                        <div class="mode-stats">
+                            <span class="stat-line">Times played: <span class="stat-value">${data.easy?.played || 0}</span></span>
+                            <span class="stat-line">Times won: <span class="stat-value">${data.easy?.wins || 0}</span></span>
+                            <span class="stat-line">Times tied: <span class="stat-value">${data.easy?.ties || 0}</span></span>
+                        </div>`;
+                    document.getElementById('moderate-wins').innerHTML = `
+                        <div class="mode-name">Medium mode</div>
+                        <div class="mode-stats">
+                            <span class="stat-line">Times played: <span class="stat-value">${data.moderate?.played || 0}</span></span>
+                            <span class="stat-line">Times won: <span class="stat-value">${data.moderate?.wins || 0}</span></span>
+                            <span class="stat-line">Times tied: <span class="stat-value">${data.moderate?.ties || 0}</span></span>
+                        </div>`;
+                    document.getElementById('hard-wins').innerHTML = `
+                        <div class="mode-name">Hard mode</div>
+                        <div class="mode-stats">
+                            <span class="stat-line">Times played: <span class="stat-value">${data.hard?.played || 0}</span></span>
+                            <span class="stat-line">Times won: <span class="stat-value">${data.hard?.wins || 0}</span></span>
+                            <span class="stat-line">Times tied: <span class="stat-value">${data.hard?.ties || 0}</span></span>
+                        </div>`;
+                });
+
+            // Set up back button to maintain login state
+            document.querySelector('.back-btn').onclick = () => {
+                window.location.href = `/index.html?username=${encodeURIComponent(username)}`;
+            };
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <h1 class="title">Play History</h1>
+        <div class="history-frame">
+            <div class="mode-stat easy-mode" id="easy-wins">Easy mode          times won: 0</div>
+            <div class="mode-stat moderate-mode" id="moderate-wins">Moderate mode      times won: 0</div>
+            <div class="mode-stat hard-mode" id="hard-wins">Hard mode         times won: 0</div>
+        </div>
+        <button class="back-btn">Back</button>
+    </div>
+</body>
+</html>

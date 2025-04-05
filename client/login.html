@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>BUMP! - Login</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background: #CAE6FF;
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .login-container {
+            position: relative;
+            width: 770px;
+            height: 480px;
+            margin: 0 auto;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .title {
+            position: absolute;
+            left: 39.35%;
+            right: 39.35%;
+            top: 24.38%;
+            font-size: 50px;
+            line-height: 20px;
+            letter-spacing: 3px;
+            color: #000000;
+        }
+
+        .text-field {
+            display: flex;
+            flex-direction: column;
+            position: absolute;
+            width: 291px;
+            height: 54px;
+            left: 31.04%;
+            background: #B2DBFF;
+            border-radius: 4px 4px 0px 0px;
+        }
+
+        .text-field.username {
+            top: 39.38%;
+        }
+
+        .text-field.password {
+            top: 55.21%;
+        }
+
+        .text-field input {
+            width: 275px;
+            height: 24px;
+            padding: 4px 16px;
+            font-family: 'Roboto';
+            font-size: 16px;
+            line-height: 24px;
+            border: none;
+            background: transparent;
+            border-bottom: 1px solid #49454F;
+        }
+
+        .text-field label {
+            padding: 4px 16px;
+            font-size: 12px;
+            line-height: 16px;
+            letter-spacing: 0.4px;
+            color: #49454F;
+        }
+
+        .button-container {
+            position: absolute;
+            top: 75%;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .action-button {
+            background: #98CEFF;
+            border-radius: 100px;
+            border: none;
+            padding: 10px 24px;
+            font-family: 'Roboto';
+            font-weight: 500;
+            font-size: 14px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .action-button:hover {
+            background: #80bbff;
+        }
+
+        .or-text {
+            font-size: 20px;
+            line-height: 20px;
+            letter-spacing: 0.1px;
+            color: #000000;
+        }
+
+        .validation-prompt {
+            position: absolute;
+            width: 268px;
+            left: 255px;
+            top: 473px;
+            font-size: 12px;
+            line-height: 16px;
+            letter-spacing: 0.4px;
+            color: #49454F;
+            text-align: center;
+            display: none;
+        }
+    </style>
+    <script>
+        function validateAndLogin() {
+            const username = document.querySelector('.text-field.username input').value;
+            const password = document.querySelector('.text-field.password input').value;
+            const prompt = document.querySelector('.validation-prompt');
+            
+            if (!username || !password) {
+                prompt.style.display = 'block';
+                prompt.textContent = 'Please enter both username and password';
+                return;
+            }
+            
+            fetch('/verify_login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    username: username,
+                    password: password
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    prompt.style.display = 'block';
+                    prompt.textContent = "Your Username and Password don't match! Try again or create a new account.";
+                    return;
+                }
+                location.href = `/index.html?username=${encodeURIComponent(username)}`;
+            });
+        }
+    </script>
+</head>
+<body>
+    <div class="login-container">
+        <h1 class="title">BUMP!</h1>
+        
+        <div class="text-field username">
+            <label>Username</label>
+            <input type="text" placeholder="Input">
+        </div>
+
+        <div class="text-field password">
+            <label>Password</label>
+            <input type="password" placeholder="Input">
+        </div>
+
+        <div class="button-container">
+            <button class="action-button" onclick="validateAndLogin()">Log in</button>
+            <button class="action-button" onclick="location.href='/'">Back</button>
+        </div>
+        <p class="validation-prompt"></p>
+    </div>
+</body>
+</html>

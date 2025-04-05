@@ -1,0 +1,132 @@
+<!-- rules.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>Rules</title>
+  <style>
+    html,
+    body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      height: 100%;
+      font-family: 'Roboto', sans-serif;
+    }
+
+    .screen {
+      width: 100vw;
+      height: 100vh;
+      background: #CAE6FF;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 2rem;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .rules-title {
+      font-size: 36px;
+      margin: 1rem 0;
+      position: sticky;
+      top: 0;
+      background: #CAE6FF;
+      z-index: 2;
+    }
+
+    .rules-text {
+      max-width: 60vw;
+      font-size: 18px;
+      line-height: 1.4;
+      text-align: center;
+      overflow-y: auto;
+      padding: 1rem;
+      margin-bottom: 80px;
+      /* Space for the back button */
+      max-height: calc(100vh - 200px);
+      /* Adjust based on title and button height */
+    }
+
+    .back-button {
+      width: 100px;
+      height: 40px;
+      background: #98CEFF;
+      border: none;
+      border-radius: 20px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.2s;
+      position: fixed;
+      bottom: 2rem;
+      z-index: 2;
+    }
+
+    .back-button:hover {
+      background: #80bbff;
+    }
+
+    /* Style the scrollbar */
+    .rules-text::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .rules-text::-webkit-scrollbar-track {
+      background: #CAE6FF;
+    }
+
+    .rules-text::-webkit-scrollbar-thumb {
+      background: #98CEFF;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="screen">
+    <h1 class="rules-title">Rules:</h1>
+    <div class="rules-text">
+      <!-- The text from your screenshot or logic -->
+      <p>Number bumping is a common game among Chinese children,
+        which requires two people to add together numbers of their two hands.</p>
+      <p>At the start of the game, the two players both hold out their hands
+        and gesture at one.</p>
+      <img src="/static/images/rules/1_start.png" width="300px" height="auto" alt="starting the game">
+      <p>They can bump any of their hands with the opponent's in turns, and the player's
+        currently bumped hand will be changed to the sum of the two hands. In the game,
+        this is done by pressing a hand from both side of the system and the player.
+        The hands are literally "bumped", which is shown by the animation after the "submit"
+        button is pressed. (Notice player's left hand)</p>
+      <img src="/static/images/rules/2.1_bump.png" width="300px" height="auto" alt="three images showing changes">
+      <img src="/static/images/rules/2.2_bump.png" width="300px" height="auto" alt="three images showing changes">
+      <img src="/static/images/rules/2.3_bump.png" width="300px" height="auto" alt="three images showing changes">
+      <p>When the sum exceeds 10, then the player's hand should
+        only show the ones digit without the tens.</p>
+      <img src="/static/images/rules/3.1_greater_10.png" width="300px" height="auto" alt="two images showing changes">
+      <img src="/static/images/rules/3.2_greater_10.png" width="300px" height="auto" alt="two images showing changes">
+
+      <p>When a hand reaches 10, it will be withdrawn from the game and becomes
+        unavailable to be bumped. This is indicated by the grey color.</p>
+      <img src="/static/images/rules/4.png" width="300px" height="auto" alt="image showing 10">
+      <p>When one player withdraws both of their hands, then they win the game,
+        while the opponent loses. The game reaches a tie if both players each have
+        only one hand left, and their bumped numbers are cycling and never reaches 10.</p>
+      <img src="/static/images/rules/5.png" width="300px" height="auto" alt="two images showing changes">
+    </div>
+
+    <button class="back-button" id="back-btn" onclick="goBack()">Back</button>
+  </div>
+
+  <script>
+    function goBack() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const username = urlParams.get('username');
+      window.location.href = `/index.html?username=${encodeURIComponent(username)}`;
+    }
+  </script>
+
+</body>
+
+</html>

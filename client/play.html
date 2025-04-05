@@ -1,0 +1,557 @@
+<!-- client/play.html -->
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Bump Game - Play</title>
+  <style>
+    /* Minimal styling (similar to previous) */
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      background: #CAE6FF;
+      font-family: Arial, sans-serif;
+    }
+    .screen {
+      width: 100vw; height: 100vh;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      position: relative;
+    }
+    #turn-label {
+      font-size: 3rem;
+      margin-bottom: 1rem;
+    }
+    .circles-container {
+      position: relative;
+      width: 70vw; max-width: 800px;
+      height: 50vh; max-height: 500px;
+      margin-bottom: 1rem;
+      position: relative;  /* For absolute positioning of the line */
+    }
+    /* Black line in the middle */
+    .circles-container::after {
+      content: '';
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 50%;
+      height: 2px;
+      background: #000;
+      transform: translateY(-50%);
+    }
+    .player-label, .system-label {
+      position: absolute;
+      left: 0;
+      font-size: 32px;
+      font-family: 'Times New Roman', serif;
+      color: #000;
+      transition: color 0.3s ease;
+    }
+    .system-label {
+      top: 25%;  /* Position at system row */
+      transform: translateY(-50%);
+    }
+    .player-label {
+      bottom: 25%;  /* Position at player row */
+      transform: translateY(50%);
+    }
+    .hand-circle {
+      position: absolute;
+      width: 120px; height: 120px;
+      border-radius: 60px;
+      background: transparent;  /* Remove background since we'll use images */
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      color: #000;
+    }
+    .hand-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+    /* Flip the right-hand images horizontally */
+    .hand-circle[data-owner="system"][data-index="1"] .hand-image,
+    .hand-circle[data-owner="player"][data-index="1"] .hand-image {
+      transform: scaleX(-1);
+    }
+    /* system top row */
+    .hand-circle[data-owner="system"][data-index="0"] {
+      top: 15%; left: 20%;
+    }
+    .hand-circle[data-owner="system"][data-index="1"] {
+      top: 15%; right: 20%;
+    }
+    /* player bottom row */
+    .hand-circle[data-owner="player"][data-index="0"] {
+      bottom: 15%; left: 20%;
+    }
+    .hand-circle[data-owner="player"][data-index="1"] {
+      bottom: 15%; right: 20%;
+    }
+    .hand-circle.disabled {
+      opacity: 0.5;  /* Use opacity for disabled state */
+      cursor: not-allowed;
+    }
+    .hand-circle.selected {
+      outline: 4px solid #ffcc00;
+      outline-offset: -4px;
+    }
+    #submit-btn {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border-radius: 1.5rem;
+      border: none;
+      background: #98CEFF;
+      cursor: pointer;
+      margin-right: 1rem;
+      transition: background-color 0.3s ease;
+    }
+    #submit-btn:disabled {
+      background: #999;
+      cursor: not-allowed;
+      opacity: 0.7;
+    }
+    #back-btn {
+      padding: 0.5rem 1rem;
+      font-size: 1rem;
+      border-radius: 1.5rem;
+      border: none;
+      background: #98CEFF;
+      cursor: pointer;
+    }
+    #status {
+      margin-top: 1rem;
+      font-size: 1rem; color: #333;
+    }
+    .warning-popup {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: hsla(0, 0%, 0%, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+    .popup-content {
+      background: #CAE6FF;
+      padding: 30px;
+      border-radius: 20px;
+      text-align: center;
+      font-family: 'Roboto', sans-serif;
+      max-width: 400px;
+    }
+    .popup-content p {
+      font-size: 20px;
+      margin-bottom: 25px;
+      color: #000;
+    }
+    .popup-buttons {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .popup-buttons button {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 100px;
+      background: #98CEFF;
+      cursor: pointer;
+      font-family: 'Roboto', sans-serif;
+      font-size: 16px;
+    }
+    .popup-buttons button:hover {
+      background: #80bbff;
+    }
+    #quit-btn {
+      background: #ff9b9b;
+      color: white;
+    }
+    #resume-btn {
+      background: #65b0f7;
+      color: white;
+    }
+    .inactive-turn {
+      color: #999;  /* Grey color for inactive player */
+    }
+  </style>
+</head>
+<body>
+<div class="screen">
+  <!-- Warning popup -->
+  <div id="warning-popup" class="warning-popup" style="display: none;">
+    <div class="popup-content">
+      <p>Are you sure you want to quit the game? You were doing so good!</p>
+      <div class="popup-buttons">
+        <button id="quit-btn">Back to main page</button>
+        <button id="resume-btn">Resume playing</button>
+      </div>
+    </div>
+  </div>
+  
+  <h1 id="turn-label">Your turn!</h1>
+  <div class="circles-container">
+    <div class="system-label">system</div>
+    <div class="hand-circle" data-owner="system" data-index="0">
+      <img src="/static/images/system/1.png" class="hand-image" alt="hand 1">
+    </div>
+    <div class="hand-circle" data-owner="system" data-index="1">
+      <img src="/static/images/system/1.png" class="hand-image" alt="hand 1">
+    </div>
+    <div class="player-label">you</div>
+    <div class="hand-circle" data-owner="player" data-index="0">
+      <img src="/static/images/player/1.png" class="hand-image" alt="hand 1">
+    </div>
+    <div class="hand-circle" data-owner="player" data-index="1">
+      <img src="/static/images/player/1.png" class="hand-image" alt="hand 1">
+    </div>
+  </div>
+  <div>
+    <button id="submit-btn" disabled>submit</button>
+    <button id="back-btn">Back to main page</button>
+  </div>
+  <div id="status"></div>
+</div>
+
+<script>
+let sessionId = null;
+let selectedSystemHand = null;
+let selectedPlayerHand = null;
+let gameStates = [];  // To track states for tie detection
+
+function getGameState(playerHands, systemHands) {
+  // Create a string representation of the game state
+  return `${systemHands.join(',')}-${playerHands.join(',')}`;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  // Initialize with system label grey since it's player's turn first
+  document.querySelector('.system-label').classList.add('inactive-turn');
+
+  // parse session_id from URL ?session_id=12345
+  const urlParams = new URLSearchParams(window.location.search);
+  sessionId = urlParams.get("session_id");
+  if (!sessionId) {
+    alert("No session_id found! Going back to difficulty choice.");
+    window.location.href = "/";
+    return;
+  }
+
+  const username = urlParams.get('username');
+
+  const circles = document.querySelectorAll('.hand-circle');
+  const submitBtn = document.getElementById('submit-btn');
+  const backBtn = document.getElementById('back-btn');
+  const turnLabel = document.getElementById('turn-label');
+  const statusDiv = document.getElementById('status');
+
+  circles.forEach(circle => {
+    circle.addEventListener('click', () => {
+      if (circle.classList.contains('disabled')) return;
+      const owner = circle.dataset.owner;
+      // only one circle selected per owner
+      circles.forEach(c => {
+        if (c !== circle && c.dataset.owner === owner) {
+          c.classList.remove('selected');
+        }
+      });
+      circle.classList.toggle('selected');
+      if (owner === 'system') {
+        selectedSystemHand = circle.classList.contains('selected')
+          ? parseInt(circle.dataset.index)
+          : null;
+      } else {
+        selectedPlayerHand = circle.classList.contains('selected')
+          ? parseInt(circle.dataset.index)
+          : null;
+      }
+      // enable submit if both selected
+      if (selectedSystemHand !== null && selectedPlayerHand !== null) {
+        submitBtn.disabled = false;
+      } else {
+        submitBtn.disabled = true;
+      }
+    });
+  });
+
+  backBtn.addEventListener('click', () => {
+    // Check if game has ended (winner exists)
+    if (turnLabel.textContent.includes('wins!')) {
+      // Game is over, go back directly
+      window.location.href = `/index.html?username=${encodeURIComponent(username)}`;
+    } else {
+      // Game is still in progress, show warning
+      document.getElementById('warning-popup').style.display = 'flex';
+    }
+  });
+
+  submitBtn.addEventListener('click', doMove);
+
+  function animateHandMove(fromCircle, toCircle, newValue, onComplete) {
+    const fromRect = fromCircle.getBoundingClientRect();
+    const toRect = toCircle.getBoundingClientRect();
+    
+    // Hide the original image during animation
+    const originalImg = fromCircle.querySelector('.hand-image');
+    originalImg.style.visibility = 'hidden';
+    
+    // Create a clone of the hand for animation
+    const clone = fromCircle.cloneNode(true);
+    clone.style.position = 'fixed';
+    clone.style.left = fromRect.left + 'px';
+    clone.style.top = fromRect.top + 'px';
+    clone.querySelector('.hand-image').style.visibility = 'visible';
+    document.body.appendChild(clone);
+    
+    requestAnimationFrame(() => {
+      clone.style.transition = 'all 0.5s ease-in-out';
+      
+      // 1. Move to opponent's position
+      setTimeout(() => {
+        clone.style.left = toRect.left + 'px';
+        clone.style.top = toRect.top + 'px';
+        
+        // 2. Update value at opponent's position
+        setTimeout(() => {
+          const img = clone.querySelector('.hand-image');
+          const owner = fromCircle.dataset.owner;
+          img.src = `/static/images/${owner}/${newValue}.png`;
+          img.alt = `hand ${newValue}`;
+          
+          // 3. Move back with new value
+          setTimeout(() => {
+            clone.style.left = fromRect.left + 'px';
+            clone.style.top = fromRect.top + 'px';
+            
+            setTimeout(() => {
+              document.body.removeChild(clone);
+              originalImg.src = `/static/images/${owner}/${newValue}.png`;
+              originalImg.alt = `hand ${newValue}`;
+              originalImg.style.visibility = 'visible';
+              if (onComplete) onComplete();
+            }, 500);
+          }, 500);
+        }, 500);
+      }, 0);
+    });
+  }
+
+  function doMove() {
+    if (!sessionId) return;
+    // Only check for hand selection if it's not an automatic move
+    if ((selectedSystemHand == null || selectedPlayerHand == null) && 
+        !turnLabel.textContent.includes("System's turn")) {
+      alert("Select a system and player hand first!");
+      return;
+    }
+
+    // Disable submit button during animation
+    submitBtn.disabled = true;
+
+    fetch("/move", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        session_id: sessionId,
+        system_hand: selectedSystemHand,
+        player_hand: selectedPlayerHand
+      })
+    })
+    .then(r => r.json())
+    .then(data => {
+      if (data.error) {
+        alert(data.error);
+        return;
+      }
+
+      const pHand = selectedPlayerHand;
+      const sHand = selectedSystemHand;
+      
+      selectedSystemHand = null;
+      selectedPlayerHand = null;
+      circles.forEach(c => c.classList.remove('selected'));
+
+      if (data.winner) {
+        turnLabel.textContent = data.winner + " wins!";
+        statusDiv.textContent = data.winner + " has won!";
+        updateCircles(data.player_hands, data.system_hands);
+      } else if (data.turn) {
+        const playerCircle = circles[2 + pHand];
+        const systemCircle = circles[sHand];
+        const newValue = (parseInt(playerCircle.querySelector('.hand-image').alt.split(' ')[1]) + 
+                         parseInt(systemCircle.querySelector('.hand-image').alt.split(' ')[1])) % 10;
+        
+        // First animate player's move
+        animateHandMove(playerCircle, systemCircle, newValue, () => {
+          // Only update the player's hand that changed
+          const playerImg = playerCircle.querySelector('.hand-image');
+          playerImg.src = `/static/images/player/${data.player_hands[pHand]}.png`;
+          playerImg.alt = `hand ${data.player_hands[pHand]}`;
+          
+          // Check if player's move resulted in a win
+          if (data.winner) {
+            turnLabel.textContent = data.winner + " wins!";
+            statusDiv.textContent = data.winner + " has won!";
+            updateCircles(data.player_hands, data.system_hands);
+            return;
+          } else {
+            turnLabel.textContent = "System's turn!";
+            submitBtn.disabled = true;
+          }
+          
+          // Wait 1 second before system's move
+          setTimeout(() => {
+            fetch("/system_move", {
+              method: "POST",
+              headers: {"Content-Type": "application/json"},
+              body: JSON.stringify({
+                session_id: sessionId,
+                phase: "simulate"
+              })
+            })
+            .then(r => r.json())
+            .then(simData => {
+              const move = simData.move;
+              const sysCircle = circles[move.from_hand];
+              const playerCircle = circles[2 + move.to_hand];
+              const newValue = (parseInt(sysCircle.querySelector('.hand-image').alt.split(' ')[1]) + 
+                              parseInt(playerCircle.querySelector('.hand-image').alt.split(' ')[1])) % 10;
+              
+              // Then animate system's hand
+              animateHandMove(sysCircle, playerCircle, newValue, () => {
+                fetch("/system_move", {
+                  method: "POST",
+                  headers: {"Content-Type": "application/json"},
+                  body: JSON.stringify({
+                    session_id: sessionId,
+                    phase: "execute",
+                    from_hand: move.from_hand,
+                    to_hand: move.to_hand
+                  })
+                })
+                .then(r => r.json())
+                .then(finalData => {
+                  // Only update the system's hand that changed
+                  const systemImg = sysCircle.querySelector('.hand-image');
+                  systemImg.src = `/static/images/system/${finalData.system_hands[move.from_hand]}.png`;
+                  systemImg.alt = `hand ${finalData.system_hands[move.from_hand]}`;
+                  
+                  // Check if system's move resulted in a win
+                  if (finalData.winner) {
+                    turnLabel.textContent = finalData.winner + " wins!";
+                    statusDiv.textContent = finalData.winner + " has won!";
+                    updateCircles(finalData.player_hands, finalData.system_hands);
+                  } else {
+                    turnLabel.textContent = "Your turn!";
+                    submitBtn.disabled = true;
+                    // After both moves are complete, check for disabled hands
+                    updateCircles(finalData.player_hands, finalData.system_hands);
+                  }
+                });
+              });
+            });
+          }, 1000);
+        });
+      }
+    });
+  }
+
+  function updateCircles(playerHands, systemHands) {
+    circles.forEach(circle => {
+      const idx = parseInt(circle.dataset.index);
+      const owner = circle.dataset.owner;
+      const img = circle.querySelector('.hand-image');
+      if (owner === 'system') {
+        img.src = `/static/images/system/${systemHands[idx]}.png`;
+        img.alt = `hand ${systemHands[idx]}`;
+        if (systemHands[idx] === 0 || systemHands[idx] === 10) {
+          circle.classList.add('disabled');
+        } else {
+          circle.classList.remove('disabled');
+        }
+      } else {
+        img.src = `/static/images/player/${playerHands[idx]}.png`;
+        img.alt = `hand ${playerHands[idx]}`;
+        if (playerHands[idx] === 0 || playerHands[idx] === 10) {
+          circle.classList.add('disabled');
+        } else {
+          circle.classList.remove('disabled');
+        }
+      }
+    });
+
+    // Check if both sides have only one hand left
+    const activeSystemHands = systemHands.filter(h => h !== 0 && h !== 10).length;
+    const activePlayerHands = playerHands.filter(h => h !== 0 && h !== 10).length;
+    
+    if (activeSystemHands === 1 && activePlayerHands === 1 && !turnLabel.textContent.includes('wins')) {
+      // Check for tie condition
+      const currentState = getGameState(playerHands, systemHands);
+      if (gameStates.includes(currentState)) {
+        // We've seen this state before - it's a tie
+        turnLabel.textContent = "You reached a tie!";
+        submitBtn.disabled = true;
+        
+        // Update server about the tie
+        fetch("/game_tie", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify({
+            session_id: sessionId
+          })
+        });
+        return;
+      }
+      
+      // Record the current state
+      gameStates.push(currentState);
+      
+      // Find the active hands
+      const activeSystemHand = systemHands.findIndex(h => h !== 0 && h !== 10);
+      const activePlayerHand = playerHands.findIndex(h => h !== 0 && h !== 10);
+      
+      // Auto-select the hands
+      selectedSystemHand = activeSystemHand;
+      selectedPlayerHand = activePlayerHand;
+      
+      // Highlight the selected hands
+      circles.forEach(c => c.classList.remove('selected'));
+      circles[activeSystemHand].classList.add('selected');
+      circles[2 + activePlayerHand].classList.add('selected');
+      
+      // Automatically trigger the move after a short delay
+      setTimeout(() => {
+        doMove();
+      }, 1000);
+    }
+  }
+
+  // Handle popup buttons
+  document.getElementById('resume-btn').addEventListener('click', () => {
+    document.getElementById('warning-popup').style.display = 'none';
+  });
+
+  document.getElementById('quit-btn').addEventListener('click', () => {
+    window.location.href = `/index.html?username=${encodeURIComponent(username)}`;
+  });
+
+  fetch("/new_game", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({
+      difficulty: urlParams.get("difficulty"),
+      username: username
+    })
+  })
+  .then(r => r.json())
+  .then(data => {
+    sessionId = data.session_id;
+    // Update the initial hands
+    updateCircles(data.player_hands, data.system_hands);
+  });
+
+});
+</script>
+</body>
+</html>

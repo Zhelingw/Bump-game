@@ -1,0 +1,83 @@
+<!-- client/choose_mode.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Choose Difficulty</title>
+  <style>
+    body, html {
+      margin: 0; padding: 0; width: 100%; height: 100%;
+    }
+    .screen {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background: #CAE6FF;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    .title {
+      font-family: 'Roboto', sans-serif;
+      font-weight: 400;
+      font-size: 40px;
+      letter-spacing: 1px;
+      color: #000;
+      margin-bottom: 2rem;
+    }
+    .diff-btn {
+      width: 191.8px;
+      height: 64px;
+      background: #98CEFF;
+      border-radius: 160px;
+      border: none;
+      margin: 0.5rem 0;
+      font-family: 'Roboto', sans-serif;
+      font-size: 22.4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+<div class="screen">
+  <h1 class="title">Choose your mode:</h1>
+  <button class="diff-btn" onclick="chooseDifficulty('easy')">Easy</button>
+  <button class="diff-btn" onclick="chooseDifficulty('moderate')">Moderate</button>
+  <button class="diff-btn" onclick="chooseDifficulty('hard')">Hard</button>
+  <p> </p>
+  <button class="diff-btn" onclick="goBack()">back</button> 
+</div>
+
+<script>
+function goBack() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('username');
+  window.location.href = `/index.html?username=${encodeURIComponent(username)}`;
+}
+
+function chooseDifficulty(level) {
+  const urlParams = new URLSearchParams(window.location.search);
+  const username = urlParams.get('username');
+
+  fetch("/new_game", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ 
+      difficulty: level,
+      username: username 
+    })
+  })
+  .then(resp => resp.json())
+  .then(data => {
+    if (data.error) {
+      alert(data.error);
+      return;
+    }
+    // redirect to /play.html with session_id and username
+    window.location.href = `/play.html?session_id=${data.session_id}&username=${encodeURIComponent(username)}`;
+  });
+}
+</script>
+</body>
+</html>
