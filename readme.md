@@ -3,6 +3,7 @@ This game is tested with Python 3.12.1. It requires the library bottle. Download
 pip install bottle
 ```
 From the terminal, execute the script server/server.py Use the link output to open the app.
+The terminal-based game can be played through prototype/prototype.py. The game is set to difficult by default, which can be adjusted through changing the level parameter in play function. 0 to 2 represents easy, moderate, and difficult mode respectively. 
 
 ———————— Game rules below (the rules can also be found in the rules page of the game!) ————————
 
@@ -24,7 +25,8 @@ When the sum exceeds 10, then the player's hand should only show the ones digit 
 
 When a hand reaches 10, it will be withdrawn from the game and becomes unavailable to be bumped. This is indicated by the grey color.
 
-![alt text](client/images/rules/4.png)￼
+![alt text](client/images/rules/4.png)
+
 
 When one player withdraws both of their hands, then they win the game, while the opponent loses. The game reaches a tie if both players each have only one hand left, and their bumped numbers are cycling and never reaches 10.
 
